@@ -40,7 +40,7 @@ router.post('/api/successPayment',function(req,res,next){
   //支付宝配置
   const formData = new AlipayFormData();
   // 调用 setMethod 并传入 get，会返回可以跳转到支付页面的 url
-  formData.setMethod('get');
+  formData.setMethod('get');      
   //支付时信息
   formData.addField('bizContent', {
     out_trade_no,
@@ -181,6 +181,7 @@ router.post('/api/payment',function(req,res,next){
               paymentUrl : resp
           }
       })
+      console.log(resp)
   })
 })
 //修改订单状态
