@@ -146,6 +146,7 @@ router.post('/api/successPayment',function(req,res,next){
 })
 //发起支付
 router.post('/api/payment',function(req,res,next){
+  console.log('payment',req.body);
   //订单号
   let orderId = req.body.orderId;
   //商品总价
@@ -272,7 +273,6 @@ router.post('/api/addOrder',function(req,res,next){
   let goodsNum = 0;
   //订单号
   let orderId = randomNumber();
-  
   goodsArr.forEach(v=>{
       goodsName.push( v.goods_name );
       goodsPrice += v.goods_price * v.goods_num;
@@ -525,13 +525,14 @@ router.post('/api/selectCart',function(req,res,next){
   })
 });
 
-// 添加购物车
-router.post("/api/addCart", function (req, res, next) {
-  let goodsId = req.body.goodsId;
-  let token = req.headers.token;
+router.post("/api/addBuy", function (req, res, next) {
+  let goodsName=req.body.name,
+  goodsPrice=req.body.price,
+  goodsImgUrl=req.body.imgUrl,
+  goodsId = req.body.id,
+  token = req.headers.token
   // 解析token
   let tokenObj = jwt.decode(token);
-  console.log(tokenObj);
   //如果执行，就证明token过期了
   if(  getTimeToken(tokenObj.exp) ){
     res.send({
@@ -540,6 +541,38 @@ router.post("/api/addCart", function (req, res, next) {
         }
     })
   }
+  connection.query(`select * from user where tel = ${tokenObj.tel}`,function(error,result){
+    let uId=result[0].id
+    connection.query(`insert into buy_list (uId,goods_id,goods_name,goods_price,goods_num,goods_imgUrl) values ("${uId}","${goodsId}","${goodsName}","${goodsPrice}","1","${goodsImgUrl}")`,function(e,r){
+      connection.query(`select * from buy_list where uId = ${uId}`,(err,rees)=>{
+        res.send({
+          data:{
+            code:200,
+            success:true,
+            msg:'buy成功' ,
+            data:rees[rees.length-1]          
+          }
+        })
+      })
+    })
+  })
+})
+
+// 添加购物车
+router.post("/api/addCart", function (req, res, next) {
+  let goodsId = req.body.goodsId;
+  let token = req.headers.token;
+  // 解析token
+  let tokenObj = jwt.decode(token);
+  //如果执行，就证明token过期了
+  if(  getTimeToken(tokenObj.exp) ){
+    res.send({
+        data:{
+            code:1000
+        }
+    })
+  }
+
   //查询用户
   connection.query(`select * from user where tel = ${tokenObj.tel}`,function(error,result){
     let uId=result[0].id
@@ -789,6 +822,7 @@ router.post("/api/login", function (req, res, next) {
 
   // 手机号密码验证
   connection.query(user.queryUserTel(params), function (error, results) {
+
     //手机号存在
     if (results.length > 0) {
       // 记录的id
@@ -828,6 +862,7 @@ router.post("/api/login", function (req, res, next) {
   });
 });
 
+
 /* 查询商品id */
 router.get("/api/goods/id", function (req, res, next) {
   let id = req.query.id;
@@ -850,7 +885,6 @@ router.get("/api/goods/shopList", function (req, res, next) {
   let [name, status, status1] = Object.values(req.query);
   let price = status1 === "价格排序" ? "price" : "";
   let num = status1 === "销量排序" ? "num" : "";
-
   // console.log(searchName,shopStatus,showStatus,name,status,status1);
   if (price != "") {
     connection.query(
@@ -858,7 +892,7 @@ router.get("/api/goods/shopList", function (req, res, next) {
         name +
         '%" order by ' +
         price +
-        " desc",
+        " asc",
       function (error, result) {
         res.send({
           code: 0,
@@ -872,7 +906,7 @@ router.get("/api/goods/shopList", function (req, res, next) {
         name +
         '%" order by ' +
         num +
-        " asc",
+        " desc",
       function (error, result) {
         res.send({
           code: 0,
@@ -893,39 +927,102 @@ router.get("/api/goods/shopList", function (req, res, next) {
   }
 });
 
-router.get("/api/message/title", function (req, res, next) {
-  res.send({
-    code:200,
-    data: [
-      {
-        title: "first",
-        list1: [
-          { id: 1, type: "list", name: "张三", text: "撒大声地" },
-          { id: 1, type: "list", name: "张三", text: "撒大声地" },
-          { id: 1, type: "list", name: "张三", text: "撒大声地" },
-          { id: 1, type: "list", name: "张三", text: "撒大声地" },
-        ],
-      },
-      {
-        title: "second",
-        list1: [
-          { id: 1, type: "list", name: "lisi", text: "asdjadal;" },
-          { id: 1, type: "list", name: "lisi", text: "asdjadal;" },
-          { id: 1, type: "list", name: "lisi", text: "asdjadal;" },
-          { id: 1, type: "list", name: "lisi", text: "asdjadal;" },
-        ],
-      },
-      {
-        title: "third",
-        list1: [
-          { id: 1, type: "list", name: "lisdsfjsi", text: "asdqroqpwqjadal;" },
-          { id: 1, type: "list", name: "lisdsfjsi", text: "asdqroqpwqjadal;" },
-          { id: 1, type: "list", name: "lisdsfjsi", text: "asdqroqpwqjadal;" },
-          { id: 1, type: "list", name: "lisdsfjsi", text: "asdqroqpwqjadal;" },
-        ],
-      },
-    ],
-  });
+router.post('/api/addStar',(req,res,next)=>{
+  let uId=req.body.uId,
+  id=req.body.id
+  connection.query(`select * from messages where uId=${uId} and id=${id}`,function(er,re){
+    let start = re[0].start
+  connection.query(`update messages set start = replace(start,${start},${parseInt(start)+1}) where uId=${uId} and id=${id} `,(err,result)=>{
+    if(err) throw err
+      res.send({
+        code:200,
+        success:true,
+        data:{
+          msg:'点赞+1'
+        }
+      })
+    })
+  })
+})
+
+router.post('/api/minStar',(req,res,next)=>{
+  let uId=req.body.uId,
+  id=req.body.id
+  connection.query(`select * from messages where uId=${uId} and id=${id}`,function(er,re){
+    let start = re[0].start
+    if(start>0){
+      connection.query(`update messages set start = replace(start,${start},${parseInt(start)-1}) where uId=${uId} and id=${id} `,(err,result)=>{
+        if(err) throw err
+          res.send({
+            code:200,
+            success:true,
+            data:{
+              msg:'取消点赞'
+            }
+          })
+        })
+    }
+
+  })
+})
+
+router.post("/api/addMessage",(req,res,next)=>{
+    //token
+    let token = req.headers.token,
+    content=req.body.content,
+    title=req.body.title,
+    time=req.body.nowTime
+    let tokenObj = jwt.decode(token);
+    connection.query(`select * from user where tel = ${tokenObj.tel}`,function(error,results){
+      //用户id
+      let uId = results[0].id,
+      name = results[0].nickName,
+      img_url=results[0].imgUrl
+      connection.query(`insert into messages (uId,content,img_url,title,time,start,name) values ('${ uId }','${content}','${img_url}','${title}','${time}','0','${name}')`,function(){
+        res.send({
+          code:200,
+          success:true,
+          data:{
+            a:1
+          }
+        })
+      })
+    })
+});
+
+/*查询消息*/
+router.post("/api/selectMessage/title", function (req, res, next) {
+  let title=req.body.title
+    connection.query(`select * from messages where title="${title}"`,(error,result)=>{
+      if (error) throw error;
+      res.send({
+        code:200,
+        data:result
+      })
+    })
+});
+
+/* 查询商品 */
+router.get("/api/goods", function (req, res, next) {
+  connection.query(
+    "select * from goods_list",
+    function (error, result) {
+      if (error) throw error;
+      res.send({
+        code: 0,
+        data: result,
+      });
+    }
+  );
+});
+
+router.get("/api/selectMerchant", function (req, res, next) {
+  connection.query(`select * from merchant_list`,function(error,result){
+    res.send({
+      code:200,
+      data:result
+    })
+  })
 });
 
 module.exports = router
