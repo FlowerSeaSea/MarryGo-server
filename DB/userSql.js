@@ -8,12 +8,16 @@ const User={
     queryUserPwd(option){
         return 'select * from user where (tel='+option.userTel+') and pwd = '+option.userPwd+''; 
     },
+    // 查询用户信息
+    queryUserInfo(option){
+        return 'select * from user where id='+option.uId+' '; 
+    },
     // 新增用户
     inserData(option){
         let userTel=option.userTel,
         userPwd=option.userPwd || "123456",
-        imgUrl=option.imgUrl || "/images/goods1.png",
-        nickName=option.nickName || "默认"
+        imgUrl=option.imgUrl || "",
+        nickName=option.nickName || ""
         // 引入token包
         let jwt=require('jsonwebtoken')
         // 用户信息
@@ -31,10 +35,19 @@ const User={
     updataInfo(option){
         let id=option.id,
         pwd=option.pwd,//之前的密码
-        userPwd=option.userPwd || pwd,
-        imgUrl=option.imgUrl|| "/images/goods1.png",
-        nickName=option.nickName|| "默认"
-        return 'UPDATE user SET pwd='+userPwd+',imgUrl="'+imgUrl+'",nickName="'+nickName+'" WHERE id='+id+''
+        userPwd=option.userPwd || pwd
+        return 'UPDATE user SET pwd='+userPwd+' WHERE id='+id+''
+    },
+
+    updataNickName(option){
+        let nickName=option.nickName,
+        id=option.id
+        return 'UPDATE user SET nickName="'+nickName+'" WHERE id='+id+''
+    },
+
+    updataImgUrl(option){
+        let id=option.id
+        return 'UPDATE user SET imgUrl="'+option.config+'" WHERE id='+id+''
     }
 }
 exports = module.exports = User

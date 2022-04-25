@@ -310,6 +310,7 @@ router.post('/api/deleteAddress',function(req,res,next){
       })
   })
 })
+
 //修改收货地址
 router.post('/api/updateAddress',function(req,res,next){
   //token
@@ -611,6 +612,63 @@ router.post("/api/addCart", function (req, res, next) {
 });
 
 
+/*修改头像 */
+router.post("/api/updataImgUrl", function (req, res, next) {
+  let token = req.headers.token,
+  tokenObj = jwt.decode(token);
+    connection.query(`select * from user where tel = ${tokenObj.tel}`,function(error,results){
+      if (error) throw error;
+      //用户id
+      let uId = results[0].id,
+      params={
+        id:uId,
+        config:req.body.config,
+      }
+      connection.query(user.updataImgUrl(params),(err,ress)=>{
+        if (err) throw err;
+        res.send({
+          code:200,
+          data:{
+            success:true,
+            msg:'修改成功'
+          }
+        })
+      })
+    })
+});
+
+/*修改昵称 */
+router.post("/api/updataNickName", function (req, res, next) {
+  let token = req.headers.token,
+  tokenObj = jwt.decode(token);
+    connection.query(`select * from user where tel = ${tokenObj.tel}`,function(error,results){
+      if (error) throw error;
+      //用户id
+      let uId = results[0].id,
+      userTel = results[0].tel,
+      params={
+        id:uId,
+        userTel:userTel,
+        nickName:req.body.nickName,
+      }
+      connection.query(user.updataNickName(params),(err,ress)=>{
+        if (err) throw err;
+          // 新增完还得查询出来
+          connection.query(user.queryUserTel(params), function (e, r) {
+            if (e) throw e;
+            res.send({
+              code: 200,
+              data: {
+                success: true,
+                msg:'修改成功',
+                data: r[0],
+              },
+            });
+          });
+      })
+    })
+});
+
 /*修改密码 */
 router.post("/api/recovery", function (req, res, next) {
   let params={
@@ -641,7 +699,6 @@ router.post("/api/recovery", function (req, res, next) {
     }
   })
 });
-
 
 // 找回密码前查询用户是否存在
 router.post("/api/selectUser", function (req, res, next) {
@@ -675,6 +732,7 @@ router.post("/api/register", function (req, res, next) {
   let params = {
     userTel: req.body.phone,
     userPwd: req.body.pwd,
+    nickName: req.body.nickName,
   };
   // 先判断是否存在
   connection.query(user.queryUserTel(params), function (error, result) {
@@ -862,7 +920,6 @@ router.post("/api/login", function (req, res, next) {
   });
 });
 
-
 /* 查询商品id */
 router.get("/api/goods/id", function (req, res, next) {
   let id = req.query.id;
@@ -927,6 +984,7 @@ router.get("/api/goods/shopList", function (req, res, next) {
   }
 });
 
+// 点赞
 router.post('/api/addStar',(req,res,next)=>{
   let uId=req.body.uId,
   id=req.body.id
@@ -945,6 +1003,7 @@ router.post('/api/addStar',(req,res,next)=>{
   })
 })
 
+// 取消点赞
 router.post('/api/minStar',(req,res,next)=>{
   let uId=req.body.uId,
   id=req.body.id
@@ -966,6 +1025,7 @@ router.post('/api/minStar',(req,res,next)=>{
   })
 })
 
+// 发消息
 router.post("/api/addMessage",(req,res,next)=>{
     //token
     let token = req.headers.token,
