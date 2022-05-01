@@ -45,6 +45,18 @@ const User={
         return 'UPDATE user SET nickName="'+nickName+'" WHERE id='+id+''
     },
 
+    updataCalendar(option){
+        let calendar=option.calendar,
+        id=option.id
+        return 'UPDATE user SET calendar="'+calendar+'" WHERE id='+id+''
+    },
+
+    updataProgress(option){
+        let progress=option.progress,
+        id=option.id
+        return 'UPDATE user SET progress="'+progress+'" WHERE id='+id+''
+    },
+
     updataImgUrl(option){
         let id=option.id
         return 'UPDATE user SET imgUrl="'+option.config+'" WHERE id='+id+''

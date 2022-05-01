@@ -637,6 +637,69 @@ router.post("/api/updataImgUrl", function (req, res, next) {
     })
 });
 
+/*修改日期 */
+router.post('/api/calendar', function (req, res, next) {
+  let token = req.headers.token,
+  tokenObj = jwt.decode(token);
+    connection.query(`select * from user where tel = ${tokenObj.tel}`,function(error,results){
+      if (error) throw error;
+      //用户id
+      let uId = results[0].id,
+      userTel = results[0].tel,
+      params={
+        id:uId,
+        userTel:userTel,
+        calendar:req.body.calendar,
+      }
+      connection.query(user.updataCalendar(params),(err,ress)=>{
+        if (err) throw err;
+          // 新增完还得查询出来
+          connection.query(user.queryUserTel(params), function (e, r) {
+            if (e) throw e;
+            res.send({
+              code: 200,
+              data: {
+                success: true,
+                msg:'日期修改成功',
+                data: r[0],
+              },
+            });
+          });
+      })
+    })
+});
+/*修改进度 */
+router.post('/api/updataProgress', function (req, res, next) {
+  let token = req.headers.token,
+  tokenObj = jwt.decode(token);
+    connection.query(`select * from user where tel = ${tokenObj.tel}`,function(error,results){
+      if (error) throw error;
+      //用户id
+      let uId = results[0].id,
+      userTel = results[0].tel,
+      params={
+        id:uId,
+        userTel:userTel,
+        progress:req.body.progress,
+      }
+      connection.query(user.updataProgress(params),(err,ress)=>{
+        if (err) throw err;
+          // 新增完还得查询出来
+          connection.query(user.queryUserTel(params), function (e, r) {
+            if (e) throw e;
+            res.send({
+              code: 200,
+              data: {
+                success: true,
+                msg:'进度更新成功',
+                data: r[0],
+              },
+            });
+          });
+      })
+    })
+});
+
 /*修改昵称 */
 router.post("/api/updataNickName", function (req, res, next) {
   let token = req.headers.token,
